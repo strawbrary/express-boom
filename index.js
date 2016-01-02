@@ -1,6 +1,6 @@
 var boom = require('boom');
 
-module.exports = function () {
+module.exports = function (outputTransformer) {
   return function (req, res, next) {
     if (res.boom) throw new Error('boom already exists on response object');
 
@@ -11,6 +11,10 @@ module.exports = function () {
 
       res.boom[key] = function () {
         var boomed = boom[key].apply(this, arguments);
+
+        if (typeof outputTransformer === 'function') {
+          boomed = outputTransformer(boomed);
+        }
 
         res.status(boomed.output.statusCode).send(boomed.output.payload);
       };
